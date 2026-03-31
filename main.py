@@ -65,6 +65,16 @@ def startup():
 
 
 # ═══════════════════════════════════════════════════════════════
+# Health Check Endpoint
+# ═══════════════════════════════════════════════════════════════
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    """Health check endpoint for Railway deployment."""
+    return {"status": "healthy", "message": "Stock Dashboard is running"}
+
+
+# ═══════════════════════════════════════════════════════════════
 # Helper Functions
 # ═══════════════════════════════════════════════════════════════
 
