@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Stock Data Intelligence Dashboard — Real-time Indian stock market analysis, visualization, comparison, and AI-powered price prediction for NSE listed companies.">
+    <title>StockIntel — Stock Data Intelligence Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading market data...</div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- ═══ Sidebar ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-icon">📊</div>
+                    <div>
+                        <h1>StockIntel</h1>
+                        <div class="subtitle">Intelligence Dashboard</div>
+                    </div>
+                </div>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="companySearch" placeholder="Search companies..." oninput="filterCompanies(this.value)">
+                </div>
+            </div>
+            <div class="company-list" id="companyList">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="sidebar-footer">
+                <div class="data-status">
+                    <span class="status-dot"></span>
+                    <span id="dataStatusText">Loading...</span>
+                </div>
+                <button class="btn-refresh" onclick="refreshData()" title="Refresh data">↻ Refresh</button>
+            </div>
+        </aside>
+
+        <!-- ═══ Main Content ═══ -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header-bar">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    <div>
+                        <h2 id="pageTitle">Market Overview</h2>
+                        <div class="header-subtitle" id="pageSubtitle">Real-time insights for NSE listed companies</div>
+                    </div>
+                </div>
+                <nav class="nav-tabs" id="navTabs">
+                    <button class="nav-tab active" data-view="overview" onclick="switchView('overview')">Overview</button>
+                    <button class="nav-tab" data-view="chart" onclick="switchView('chart')">Chart</button>
+                    <button class="nav-tab" data-view="summary" onclick="switchView('summary')">Summary</button>
+                    <button class="nav-tab" data-view="compare" onclick="switchView('compare')">Compare</button>
+                    <button class="nav-tab" data-view="predict" onclick="switchView('predict')">🧠 Predict</button>
+                    <button class="nav-tab" data-view="insights" onclick="switchView('insights')">Insights</button>
+                </nav>
+            </div>
+
+            <!-- ═══ OVERVIEW VIEW ═══ -->
+            <section class="view-section active" id="view-overview">
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="overviewStats">
+                    <div class="stat-card accent-indigo">
+                        <div class="stat-label">Total Companies</div>
+                        <div class="stat-value" id="statCompanies">—</div>
+                    </div>
+                    <div class="stat-card accent-green">
+                        <div class="stat-label">Top Gainer Today</div>
+                        <div class="stat-value" id="statGainer">—</div>
+                        <div class="stat-change price-up" id="statGainerChange"></div>
+                    </div>
+                    <div class="stat-card accent-red">
+                        <div class="stat-label">Top Loser Today</div>
+                        <div class="stat-value" id="statLoser">—</div>
+                        <div class="stat-change price-down" id="statLoserChange"></div>
+                    </div>
+                    <div class="stat-card accent-amber">
+                        <div class="stat-label">Most Volatile</div>
+                        <div class="stat-value" id="statVolatile">—</div>
+                        <div class="stat-change" id="statVolatileScore" style="color: var(--accent-amber);"></div>
+                    </div>
+                </div>
+
+                <!-- Sector Performance -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">🏭</span> Sector Performance</div>
+                    </div>
+                    <div class="sector-grid" id="sectorGrid">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+
+                <!-- Top Gainers & Losers -->
+                <div class="insights-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><span class="icon">🟢</span> Top Gainers</div>
+                        </div>
+                        <ul class="insight-list" id="gainersList">
+                            <!-- Dynamic -->
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><span class="icon">🔴</span> Top Losers</div>
+                        </div>
+                        <ul class="insight-list" id="losersList">
+                            <!-- Dynamic -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ CHART VIEW ═══ -->
+            <section class="view-section" id="view-chart">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="icon">📈</span>
+                            <span id="chartTitle">Select a company to view chart</span>
+                        </div>
+                        <div class="time-filters">
+                            <button class="time-btn" data-days="7" onclick="changeTimeRange(7)">1W</button>
+                            <button class="time-btn active" data-days="30" onclick="changeTimeRange(30)">1M</button>
+                            <button class="time-btn" data-days="90" onclick="changeTimeRange(90)">3M</button>
+                            <button class="time-btn" data-days="180" onclick="changeTimeRange(180)">6M</button>
+                            <button class="time-btn" data-days="365" onclick="changeTimeRange(365)">1Y</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Volume Chart -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">📊</span> Trading Volume</div>
+                    </div>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="volumeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SUMMARY VIEW ═══ -->
+            <section class="view-section" id="view-summary">
+                <div id="summaryContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3>No Company Selected</h3>
+                        <p>Click on a company from the sidebar to view its summary</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ COMPARE VIEW ═══ -->
+            <section class="view-section" id="view-compare">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">⚖️</span> Compare Stocks</div>
+                    </div>
+                    <div class="compare-controls">
+                        <select class="compare-select" id="compareStock1">
+                            <option value="">Select Stock 1</option>
+                        </select>
+                        <span style="color: var(--text-muted); font-weight: 600;">VS</span>
+                        <select class="compare-select" id="compareStock2">
+                            <option value="">Select Stock 2</option>
+                        </select>
+                        <select class="compare-select" id="comparePeriod" style="min-width: 120px;">
+                            <option value="30">30 Days</option>
+                            <option value="90" selected>90 Days</option>
+                            <option value="180">180 Days</option>
+                            <option value="365">1 Year</option>
+                        </select>
+                        <button class="btn-compare" onclick="compareStocks()">Compare</button>
+                    </div>
+                    <div id="compareResults">
+                        <div class="empty-state">
+                            <div class="empty-icon">⚖️</div>
+                            <h3>Select Two Stocks</h3>
+                            <p>Choose two companies and click Compare to analyze their performance</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ PREDICT VIEW ═══ -->
+            <section class="view-section" id="view-predict">
+                <div class="prediction-banner">
+                    <div class="banner-icon">🧠</div>
+                    <div class="banner-text">
+                        <div class="banner-title">AI Price Prediction (Linear Regression)</div>
+                        <div class="banner-subtitle">Educational model — Not financial advice. Select a company to see predictions.</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">🔮</span> <span id="predictTitle">Price Prediction</span></div>
+                    </div>
+                    <div id="predictMetrics" class="model-metrics" style="display: none;"></div>
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+                    <div id="predictContent">
+                        <div class="empty-state">
+                            <div class="empty-icon">🧠</div>
+                            <h3>Select a Company</h3>
+                            <p>Click on a company from the sidebar to see AI predictions</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ INSIGHTS VIEW ═══ -->
+            <section class="view-section" id="view-insights">
+                <!-- Volatility Rankings -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">⚡</span> Volatility Rankings</div>
+                    </div>
+                    <ul class="insight-list" id="volatilityList">
+                        <!-- Dynamic -->
+                    </ul>
+                </div>
+
+                <!-- Correlation Matrix -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><span class="icon">🔗</span> Correlation Matrix (90 Days)</div>
+                    </div>
+                    <div class="matrix-container" id="correlationMatrix">
+                        <div class="empty-state">
+                            <div class="empty-icon">🔗</div>
+                            <h3>Loading correlation data...</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
