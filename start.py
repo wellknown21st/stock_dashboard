@@ -4,8 +4,9 @@ from data_collector import collect_all_data
 
 
 def main():
-    # Collect or refresh data first (this script exits after completeness)
-    collect_all_data()
+    # Skip data collection in Railway to speed up startup and avoid network issues
+    if os.environ.get("SKIP_DATA_COLLECTION") != "true":
+        collect_all_data()
 
     port = int(os.environ.get("PORT", "8000"))
     host = "0.0.0.0"
